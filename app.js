@@ -1,4 +1,5 @@
 
+require('dotenv').config({ path: '.env'})
 const express = require("express");
 const ejs = require("ejs");
 const bodyparser=require("body-parser");
@@ -15,8 +16,7 @@ const userSchema = new mongoose.Schema({
     email:String,
     password:String
 });
-var secret = "Imthebestintheworld";
-userSchema.plugin(encrypt, { secret: secret,encryptedFields: ['password'] });
+userSchema.plugin(encrypt, { secret: process.env.SECRET,encryptedFields: ['password'] });
 
 mongoose.connect("mongodb://localhost:27017/userDB");
 const user = mongoose.model("user",userSchema);
@@ -40,12 +40,11 @@ app.post("/register",(req,res)=>{
     const Username=req.body.username;
     const Password = req.body.password;
     
-    user.findOne({email:Username},(err,found)=>{
-        if(!err){
+    try{
+     user.findOne({email:Username},(err,found)=>{
             
-            if(found === Username){
-               
-               res.render("home");
+            if(found){    
+                res.send('<script>alert("Email alreday exits");window.location="register"</script>')
                 
             }else{
                 const newUser = new user({
@@ -61,10 +60,13 @@ app.post("/register",(req,res)=>{
                 }
             });
             }
-        }else{
-            res.send(err);
-        }
+       
     });
+
+    }catch{
+        console.log(err);
+    }
+ 
    
 });
 
